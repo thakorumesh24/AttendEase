@@ -1,0 +1,635 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance Management</title>
+
+    <!-- ================= CSS START ================= -->
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #1d4ed8;
+            color: white;
+            padding: 22px 5%;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        header p {
+            margin: 0;
+            color: #dbeafe;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .card, .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #0000000d;
+        }
+
+        .card p {
+            margin: 0 0 10px;
+            color: #64748b;
+        }
+
+        .card h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .panel {
+            margin-top: 22px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        input, select {
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        button {
+            padding: 11px 15px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        .present-btn {
+            background: #16a34a;
+            margin-right: 4px;
+        }
+
+        .absent-btn {
+            background: #dc2626;
+        }
+
+        .present-btn:hover {
+            background: #15803d;
+        }
+
+        .absent-btn:hover {
+            background: #b91c1c;
+        }
+
+        .active {
+            outline: 3px solid #93c5fd;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #eff6ff;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-present {
+            color: #166534;
+            background: #dcfce7;
+        }
+
+        .status-absent {
+            color: #991b1b;
+            background: #fee2e2;
+        }
+
+        .status-unmarked {
+            color: #475569;
+            background: #e2e8f0;
+        }
+
+        .delete-btn {
+            background: #64748b;
+        }
+
+        .message {
+            margin: 10px 0;
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .empty {
+            padding: 20px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        footer {
+            background: #172554;
+            color: white;
+            text-align: center;
+            padding: 18px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 750px) {
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 450px) {
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .container {
+                width: 94%;
+            }
+        }
+    </style>
+    <!-- ================= CSS END ================= -->
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <h1>Student Attendance System</h1>
+        <p>Manage students and track daily attendance easily.</p>
+    </header>
+
+    <main class="container">
+
+        <!-- ================= SUMMARY CARDS ================= -->
+        <section class="summary">
+            <div class="card">
+                <p>Total Students</p>
+                <h2 id="totalStudents">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Present Today</p>
+                <h2 id="presentCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Absent Today</p>
+                <h2 id="absentCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Attendance Rate</p>
+                <h2 id="attendanceRate">0%</h2>
+            </div>
+        </section>
+
+        <!-- ================= ADD STUDENT ================= -->
+        <section class="panel">
+            <h2>Add New Student</h2>
+
+            <form id="studentForm" class="controls">
+                <input
+                    type="text"
+                    id="studentName"
+                    placeholder="Enter student name"
+                    required
+                >
+
+                <input
+                    type="text"
+                    id="rollNumber"
+                    placeholder="Enter roll number"
+                    required
+                >
+
+                <button type="submit">Add Student</button>
+            </form>
+
+            <p id="message" class="message" aria-live="polite"></p>
+        </section>
+
+        <!-- ================= ATTENDANCE TABLE ================= -->
+        <section class="panel">
+            <h2>Manage Attendance</h2>
+
+            <div class="controls">
+                <input type="date" id="attendanceDate">
+
+                <input
+                    type="text"
+                    id="searchBox"
+                    placeholder="Search name or roll number..."
+                >
+
+                <button type="button" id="markAllPresent">
+                    Mark All Present
+                </button>
+
+                <button type="button" id="resetDay" class="delete-btn">
+                    Clear Today's Marks
+                </button>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll No.</th>
+                            <th>Student Name</th>
+                            <th>Attendance</th>
+                            <th>Mark Attendance</th>
+                            <th>Overall %</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="studentTable"></tbody>
+                </table>
+            </div>
+
+            <p id="emptyMessage" class="empty" hidden>
+                No students found. Add a student or change your search.
+            </p>
+        </section>
+
+        <!-- ================= REPORT ================= -->
+        <section class="panel">
+            <h2>Attendance Report</h2>
+            <p id="reportText">
+                Attendance report will appear here.
+            </p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Student Attendance Management System</p>
+        <p>College Project | HTML + CSS + JavaScript</p>
+    </footer>
+
+    <!-- ================= JAVASCRIPT START ================= -->
+    <script>
+        // 1. Get HTML elements
+        const studentForm = document.getElementById("studentForm");
+        const nameInput = document.getElementById("studentName");
+        const rollInput = document.getElementById("rollNumber");
+        const dateInput = document.getElementById("attendanceDate");
+        const searchBox = document.getElementById("searchBox");
+        const studentTable = document.getElementById("studentTable");
+        const message = document.getElementById("message");
+
+        // 2. Get today's date in local time
+        function getToday() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+
+            return `${year}-${month}-${day}`;
+        }
+
+        dateInput.value = getToday();
+        dateInput.max = getToday();
+
+        // 3. Load saved data from the browser
+        function loadData(key, fallback) {
+            try {
+                const saved = localStorage.getItem(key);
+                return saved ? JSON.parse(saved) : fallback;
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        let students = loadData("attendanceStudents", [
+            { name: "Rahul Patel", roll: "101" },
+            { name: "Priya Shah", roll: "102" },
+            { name: "Amit Kumar", roll: "103" }
+        ]);
+
+        // Format: attendance[date][rollNumber] = "Present" or "Absent"
+        let attendance = loadData("attendanceRecords", {});
+
+        // 4. Save data in the browser
+        function saveData() {
+            localStorage.setItem(
+                "attendanceStudents",
+                JSON.stringify(students)
+            );
+
+            localStorage.setItem(
+                "attendanceRecords",
+                JSON.stringify(attendance)
+            );
+        }
+
+        // 5. Get the selected day's attendance
+        function getStatus(roll) {
+            const date = dateInput.value;
+            return attendance[date]?.[roll] || "Not Marked";
+        }
+
+        // 6. Calculate each student's overall attendance
+        function getPercentage(roll) {
+            let total = 0;
+            let present = 0;
+
+            Object.values(attendance).forEach(function (day) {
+                if (day[roll] === "Present" || day[roll] === "Absent") {
+                    total++;
+
+                    if (day[roll] === "Present") {
+                        present++;
+                    }
+                }
+            });
+
+            if (total === 0) {
+                return 0;
+            }
+
+            return Math.round((present / total) * 100);
+        }
+
+        // 7. Mark a student Present or Absent
+        function markAttendance(roll, status) {
+            const date = dateInput.value;
+
+            if (!date) {
+                alert("Please select a date.");
+                return;
+            }
+
+            if (date > getToday()) {
+                alert("Future dates cannot be marked.");
+                return;
+            }
+
+            if (!attendance[date]) {
+                attendance[date] = {};
+            }
+
+            attendance[date][roll] = status;
+
+            saveData();
+            renderPage();
+        }
+
+        // 8. Show students and attendance in the table
+        function renderPage() {
+            const searchText = searchBox.value.toLowerCase().trim();
+
+            const filteredStudents = students.filter(function (student) {
+                return (
+                    student.name.toLowerCase().includes(searchText) ||
+                    student.roll.toLowerCase().includes(searchText)
+                );
+            });
+
+            studentTable.innerHTML = "";
+
+            filteredStudents.forEach(function (student) {
+                const status = getStatus(student.roll);
+                const percentage = getPercentage(student.roll);
+
+                let statusClass = "status-unmarked";
+
+                if (status === "Present") {
+                    statusClass = "status-present";
+                } else if (status === "Absent") {
+                    statusClass = "status-absent";
+                }
+
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${student.roll}</td>
+                    <td>${student.name}</td>
+                    <td>
+                        <span class="status ${statusClass}">
+                            ${status}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="present-btn ${
+                            status === "Present" ? "active" : ""
+                        }" data-roll="${student.roll}" data-status="Present">
+                            Present
+                        </button>
+
+                        <button class="absent-btn ${
+                            status === "Absent" ? "active" : ""
+                        }" data-roll="${student.roll}" data-status="Absent">
+                            Absent
+                        </button>
+                    </td>
+                    <td>${percentage}%</td>
+                `;
+
+                studentTable.appendChild(row);
+            });
+
+            document.getElementById("emptyMessage").hidden =
+                filteredStudents.length !== 0;
+
+            updateSummary();
+        }
+
+        // 9. Update summary cards and report
+        function updateSummary() {
+            const total = students.length;
+            let present = 0;
+            let absent = 0;
+
+            students.forEach(function (student) {
+                const status = getStatus(student.roll);
+
+                if (status === "Present") present++;
+                if (status === "Absent") absent++;
+            });
+
+            const marked = present + absent;
+
+            const rate = marked === 0
+                ? 0
+                : Math.round((present / marked) * 100);
+
+            document.getElementById("totalStudents").textContent = total;
+            document.getElementById("presentCount").textContent = present;
+            document.getElementById("absentCount").textContent = absent;
+            document.getElementById("attendanceRate").textContent = rate + "%";
+
+            document.getElementById("reportText").textContent =
+                `Date: ${dateInput.value} | Total: ${total} | ` +
+                `Present: ${present} | Absent: ${absent} | ` +
+                `Not marked: ${total - marked} | Attendance rate: ${rate}%`;
+        }
+
+        // 10. Add a new student
+        studentForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const name = nameInput.value.trim();
+            const roll = rollInput.value.trim();
+
+            if (!name || !roll) {
+                message.textContent = "Please fill in both fields.";
+                return;
+            }
+
+            const duplicate = students.some(function (student) {
+                return student.roll.toLowerCase() === roll.toLowerCase();
+            });
+
+            if (duplicate) {
+                message.textContent = "This roll number already exists.";
+                return;
+            }
+
+            students.push({ name: name, roll: roll });
+
+            saveData();
+            studentForm.reset();
+
+            message.textContent = "Student added successfully!";
+            renderPage();
+        });
+
+        // 11. Handle Present and Absent buttons
+        studentTable.addEventListener("click", function (event) {
+            const button = event.target.closest("button[data-status]");
+
+            if (button) {
+                markAttendance(
+                    button.dataset.roll,
+                    button.dataset.status
+                );
+            }
+        });
+
+        // 12. Search students
+        searchBox.addEventListener("input", renderPage);
+
+        // 13. Change the attendance date
+        dateInput.addEventListener("change", function () {
+            if (dateInput.value > getToday()) {
+                alert("Please select today or an earlier date.");
+                dateInput.value = getToday();
+            }
+
+            renderPage();
+        });
+
+        // 14. Mark all students Present for the selected date
+        document.getElementById("markAllPresent")
+            .addEventListener("click", function () {
+                const date = dateInput.value;
+
+                if (date > getToday()) {
+                    alert("Future dates cannot be marked.");
+                    return;
+                }
+
+                if (!confirm("Mark every student Present for this date?")) {
+                    return;
+                }
+
+                if (!attendance[date]) {
+                    attendance[date] = {};
+                }
+
+                students.forEach(function (student) {
+                    attendance[date][student.roll] = "Present";
+                });
+
+                saveData();
+                renderPage();
+            });
+
+        // 15. Clear attendance for the selected date
+        document.getElementById("resetDay")
+            .addEventListener("click", function () {
+                const date = dateInput.value;
+
+                if (!attendance[date]) {
+                    alert("No attendance marks to clear for this date.");
+                    return;
+                }
+
+                if (!confirm("Clear all attendance marks for this date?")) {
+                    return;
+                }
+
+                delete attendance[date];
+
+                saveData();
+                renderPage();
+            });
+
+        // 16. Display the page when it opens
+        renderPage();
+    </script>
+    <!-- ================= JAVASCRIPT END ================= -->
+
+</body>
+</html>
